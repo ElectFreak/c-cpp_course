@@ -37,14 +37,24 @@ int main(int argc, char** argv) {
 
     if (x + w > img.width || y + h > img.height) {
       printf("Out of bounds img\n");
+      free_bmp_img(&img);
       return 0;
     }
 
     bmp_img_t cropped;
-    crop(&img, &cropped, x, y, w, h);
+    if (crop(&img, &cropped, x, y, w, h) == -1) {
+      printf("Failed to crop img\n");
+      free_bmp_img(&img);
+      return 0;
+    }
     
     bmp_img_t rotated;
-    rotate(&cropped, &rotated);
+    if (rotate(&cropped, &rotated) == -1) {
+      printf("Failed to rotate img\n");
+      free_bmp_img(&img);
+      return 0;
+    }
+
     save_bmp(in_bmp, rotated, out_bmp);
 
     free_bmp_img(&cropped);

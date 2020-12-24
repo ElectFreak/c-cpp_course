@@ -70,22 +70,26 @@ int load_bmp(FILE* bmp_file, bmp_img_t* img) {
    
 }
 
-void crop(bmp_img_t* img, bmp_img_t* cropped_img, int x, int y, int width, int height) {
+int crop(bmp_img_t* img, bmp_img_t* cropped_img, int x, int y, int width, int height) {
   cropped_img->width = width;
   cropped_img->height = height;
-  init_pixels(cropped_img);
+  if (init_pixels(cropped_img) == -1) 
+    return -1;
   for (int i = 0; i < height; i++)
     for (int j = 0; j < width; j++) 
       memcpy(cropped_img->pixels[i][j], img->pixels[y + i][x + j], 3);
+  return 0;
 }
 
-void rotate(bmp_img_t* img, bmp_img_t* rotated_img) {
+int rotate(bmp_img_t* img, bmp_img_t* rotated_img) {
   rotated_img->width = img->height;
   rotated_img->height = img->width;
-  init_pixels(rotated_img);
+  if (init_pixels(rotated_img) == -1) 
+    return -1;
   for (int i = 0; i < rotated_img->height; i++)
     for (int j = 0; j < rotated_img->width; j++) 
       memcpy(rotated_img->pixels[i][j], img->pixels[img->height - 1 - j][i], 3);
+  return 0;
 }
 
 void save_bmp(FILE* from_file, bmp_img_t from_bmp, FILE* to_file) {
@@ -97,7 +101,7 @@ void save_bmp(FILE* from_file, bmp_img_t from_bmp, FILE* to_file) {
 
   int shift = get_shift(from_bmp.width);
   int width_with_shift = from_bmp.width + shift;
-  int size_pixel_data = width_with_shift * from_bmp.height * 3;
+  int size_pixel_data = (from_bmp.width * 3 + shift) * from_bmp.height;
   int size_file = size_pixel_data + 54;
 
   fseek(to_file, 0x2, SEEK_SET); // size of file
