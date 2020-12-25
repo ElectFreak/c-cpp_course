@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
     w = atoi(argv[6]);
     h = atoi(argv[7]);
 
-    if (x + w > img.width || y + h > img.height) {
+    if (x < 0 || y < 0 || x + w > img.width || y + h > img.height) {
       printf("Out of bounds img\n");
       free_bmp_img(&img);
       return 0;
@@ -52,10 +52,11 @@ int main(int argc, char** argv) {
     if (rotate(&cropped, &rotated) == -1) {
       printf("Failed to rotate img\n");
       free_bmp_img(&img);
+      free_bmp_img(&cropped);
       return 0;
     }
 
-    save_bmp(in_bmp, rotated, out_bmp);
+    save_bmp(in_bmp, &rotated, out_bmp);
 
     free_bmp_img(&cropped);
     free_bmp_img(&rotated);
