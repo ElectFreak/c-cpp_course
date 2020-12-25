@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
       return 0;
     }
 
-    save_bmp(in_bmp, &rotated, out_bmp);
+    save_bmp(&rotated, out_bmp);
 
     free_bmp_img(&cropped);
     free_bmp_img(&rotated);
