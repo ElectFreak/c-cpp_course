@@ -37,9 +37,6 @@ int load_bmp(FILE* bmp_file, bmp_img_t* img) {
   img->width = img->header.info_header.width;
   img->height = img->header.info_header.height;
 
-  printf("signature: %x\n", img->header.file_header.signature);
-  // printf("height: %d\n", img->height);
-
   int shift = get_shift(img->width); // for zero bytes skipping
 
   if (init_pixels(img) == -1)   
@@ -84,8 +81,8 @@ int rotate(bmp_img_t* img, bmp_img_t* rotated_img) {
 
   rotated_img->width = img->height;
   rotated_img->height = img->width;
-  rotated_img->header.info_header.width = img->width;
-  rotated_img->header.info_header.height = img->height;
+  rotated_img->header.info_header.width = rotated_img->width;
+  rotated_img->header.info_header.height = rotated_img->height;
   int image_size = (rotated_img->width * 3 + get_shift(rotated_img->width)) * rotated_img->height * 3;
   int file_size = 54 + image_size;
 

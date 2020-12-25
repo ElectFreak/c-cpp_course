@@ -1,7 +1,7 @@
 #ifndef BMP_H_
 #define BMP_H_
 #include <stdio.h>
-#include <stdio.h>
+#include <stdlib.h>
 
 #pragma pack(push, 2)
 
