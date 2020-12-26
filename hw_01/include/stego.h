@@ -8,7 +8,7 @@
 typedef struct key {
   int x, y;
   char color;
-} key_t;
+} msg_key_t;
 
 int insert(FILE* key_file, bmp_img_t* img, FILE* msg_file);
 int extract(FILE* key_file, const bmp_img_t* img, FILE* msg_file);

@@ -53,18 +53,20 @@ int load_bmp(FILE* bmp_file, bmp_img_t* img) {
   return 0;
 }
 
+static void calculate_sizes(bmp_img_t* img) {
+  int image_size = (img->width * 3 + get_shift(img->width)) * img->height;
+  int file_size = 54 + image_size;
+  img->header.info_header.width = img->width;
+  img->header.info_header.height = img->height;
+  img->header.info_header.image_size = image_size;
+  img->header.file_header.file_size = file_size;
+}
+
 int crop(bmp_img_t* img, bmp_img_t* cropped_img, int x, int y, int width, int height) {
   cropped_img->header = img->header;
-
   cropped_img->width = width;
   cropped_img->height = height;
-  cropped_img->header.info_header.width = width;
-  cropped_img->header.info_header.height = height;
-  int image_size = (cropped_img->width * 3 + get_shift(cropped_img->width)) * cropped_img->height;
-  int file_size = 54 + image_size;
-
-  cropped_img->header.info_header.image_size = image_size;
-  cropped_img->header.file_header.file_size = file_size;
+  calculate_sizes(cropped_img);
 
   if (init_pixels(cropped_img) == -1) 
     return -1;
@@ -78,11 +80,9 @@ int crop(bmp_img_t* img, bmp_img_t* cropped_img, int x, int y, int width, int he
 
 int rotate(bmp_img_t* img, bmp_img_t* rotated_img) {
   rotated_img->header = img->header;
-
   rotated_img->width = img->height;
   rotated_img->height = img->width;
-  rotated_img->header.info_header.width = rotated_img->width;
-  rotated_img->header.info_header.height = rotated_img->height;
+  calculate_sizes(rotated_img);
 
   if (init_pixels(rotated_img) == -1) 
     return -1;

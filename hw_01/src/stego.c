@@ -23,14 +23,14 @@ static char decode(char sym) {
   return sym + 'A';
 }
 
-static int get_key(FILE* file, key_t* key) {
+static int get_key(FILE* file, msg_key_t* key) {
     if (fscanf(file, "%d %d %c", &key->x, &key->y, &key->color) != 3)
       return -1;
   
   return 0;
 }
 
-static void print_key(key_t* key) {
+static void print_key(msg_key_t* key) {
   printf("x: %d, y: %d, color: %d\n", key->x, key->y, (int)key->color);
 }
 
@@ -43,7 +43,7 @@ int insert(FILE* key_file, bmp_img_t* img, FILE* msg_file) {
     char coded_chr = code(chr);
   
     for (int j = 0; j < 5; j++) {
-      key_t key; 
+      msg_key_t key; 
       if (get_key(key_file, &key) == -1)
         return -1;
       
@@ -75,7 +75,7 @@ int insert(FILE* key_file, bmp_img_t* img, FILE* msg_file) {
 }
 
 int extract(FILE* key_file, const bmp_img_t* img, FILE* msg_file) {
-  key_t key;
+  msg_key_t key;
   while (1) {
     char chr = 0;
 
