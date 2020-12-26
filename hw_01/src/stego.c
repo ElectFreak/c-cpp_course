@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <string.h>
+// #include <string.h>
 
 #include "stego.h"
 #include "bmp.h"
@@ -20,78 +20,95 @@ static char decode(char sym) {
   return sym + 'A';
 }
 
-int get_key(FILE* file, int size, key_t* key) {
-  for (int i = 0; i < size; i++)
-    if (fscanf(file, "%d %d %c", &key[i].x, &key[i].y, (char*)&key[i].color) != 3)
+static int get_key(FILE* file, key_t* key) {
+    if (fscanf(file, "%d %d %c", &key->x, &key->y, (char*)&key->color) != 3)
       return -1;
   
   return 0;
 }
 
-void print_key(key_t* key, int size) {
-  for (int i = 0; i < size; i++) {
-    printf("x: %d, y: %d, color: %c\n", key[i].x, key[i].y, key[i].color);
-  }
+static void print_key(key_t* key) {
+  printf("x: %d, y: %d, color: %d\n", key->x, key->y, (int)key->color);
 }
 
-int insert(key_t* key, bmp_img_t* img, char* msg) {
-  int len = strlen(msg); 
-  for (int i = 0; i < len; i++) {
-    char sym = code(msg[i]);
+int insert(FILE* key_file, bmp_img_t* img, FILE* msg_file) {
+  while (1) {
+    int chr = fgetc(msg_file);
+    if (chr == EOF) {
+      break;
+    }
+    char coded_chr = code(chr);
   
     for (int j = 0; j < 5; j++) {
-      char mask = 1 & (sym >> j);
+      key_t key; 
+      if (get_key(key_file, &key) == -1)
+        return -1;
+      // print_key(&key);
+      // color_t red = r;
+      // printf("(int)r: %d\n", (int)r);
+      
+      char mask = 1 & (coded_chr >> j);
 
-      int x = key[i * 5 + j].x;
-      int y = key[i * 5 + j].y;
-    
+      int x = key.x;
+      int y = key.y;
+
       if (x >= img->width || y >= img->height) {
         return -1;
       }
 
-      if (key[i].color == r) {
-        img->pixels[x][y].r = (img->pixels[x][y].r & (~1)) | mask;        
+      printf("change soon\n");
+
+      if ((char)key.color == 'R') {
+        printf("changed\n");
+        img->pixels[y][x].r = (img->pixels[y][x].r & (~1)) | mask;        
       }
 
-      if (key[i].color == g) {
-        img->pixels[x][y].g = (img->pixels[x][y].g & (~1)) | mask;
+      if ((char)key.color == 'G') {
+        printf("changed\n");
+        img->pixels[y][x].g = (img->pixels[y][x].g & (~1)) | mask;
       }
 
-      if (key[i].color == b) {
-        img->pixels[x][y].b = (img->pixels[x][y].b & (~1)) | mask;
+      if ((char)key.color == 'B') {
+        printf("changed\n");
+        img->pixels[y][x].b = (img->pixels[y][x].b & (~1)) | mask;
       }
     }
+
   }
 
   return 0;
 }
 
-int extract(key_t* key, bmp_img_t* img, char* msg, int len) {
-  for (int i = 0; i < len; i++) {
-    char sym = 0;
+int extract(FILE* key_file, const bmp_img_t* img, FILE* msg_file) {
+  key_t key;
+  while (!feof(key_file)) {
+    char chr = 0;
 
     for (int j = 0; j < 5; j++) {
       char mask;
+      
+      if (get_key(key_file, &key) == -1)
+        return -1;
+      
+      int x = key.x;
+      int y = key.y;
 
-      int x = key[i * 5 + j].x;
-      int y = key[i * 5 + j].y;
-
-      if (key[i].color == r) {
-        mask = img->pixels[x][y].r & 1;
+      if ((char)key.color == 'R') {
+        mask = img->pixels[y][x].r & 1;
       }
 
-      if (key[i].color == g) {
-        mask = img->pixels[x][y].g & 1;
+      if ((char)key.color == 'G') {
+        mask = img->pixels[y][x].g & 1;
       }
 
-      if (key[i].color == b) {
-        mask = img->pixels[x][y].b & 1;
+      if ((char)key.color == 'B') {
+        mask = img->pixels[y][x].b & 1;
       }
 
-      sym |= mask << j;
+      chr |= mask << j;
     }
 
-    msg[i] = decode(sym);
+    fputc(decode(chr), msg_file);
   }
  
   return 0;

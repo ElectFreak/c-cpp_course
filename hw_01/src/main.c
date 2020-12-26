@@ -89,99 +89,108 @@ int main(int argc, char** argv) {
   if (strcmp(argv[1], "insert") == 0) {
     if (argc != 6) {
       printf("Invalid number of arguments\n");
-    
       return 0;
     }
 
-    FILE* in_bmp = fopen(argv[2], "rb");
+    FILE  *in_bmp = NULL,
+          *out_bmp = NULL,
+          *key_file = NULL,
+          *msg_file = NULL;
+    
+    bmp_img_t img;
+
+    in_bmp = fopen(argv[2], "rb");
     if (in_bmp == NULL) {
       printf("Failed to open input file\n");
-    
-      return 0;
+      goto free_all;
     }
 
-    FILE* out_bmp = fopen(argv[3], "wb");
+    out_bmp = fopen(argv[3], "wb");
     if (out_bmp == NULL) {
       printf("Failed to open output file\n");
-      fclose(in_bmp);
-      
-      return 0;
+      goto free_all;
     }
 
-    FILE* key_file = fopen(argv[4], "rb");
+    key_file = fopen(argv[4], "r");
     if (key_file == NULL) {
       printf("Failed to open key file\n");
-      fclose(in_bmp);
-      fclose(out_bmp);
-      
-      return 0;
+      goto free_all;
     }
-        
-    bmp_img_t img;
-    if (load_bmp(in_bmp, &img) == -1) {
-      printf("Failed to load image\n");
-      fclose(in_bmp);
-      fclose(out_bmp);
-      fclose(key_file);
-      
-      return 0;
-    } 
 
-    FILE* msg_file = fopen(argv[5], "rb");
+    msg_file = fopen(argv[5], "r");
     if (msg_file == NULL) {
       printf("Failed to open message file\n");
-      fclose(in_bmp);
-      fclose(out_bmp);
-      fclose(key_file);
-      
-      return 0;
-    }
+      goto free_all;
+    }  
+        
+    if (load_bmp(in_bmp, &img) == -1) {
+      printf("Failed to load image\n");
+      goto free_all;
+    } 
 
-    char msg[500];
-    fscanf(msg_file, "%s", msg);
-    int len = strlen(msg);
-    key_t* key = malloc(sizeof(key_t) * len * 5);
-    if (get_key(key_file, len * 5, key) == -1) {
-      printf("Key is not valid\n");
-      fclose(in_bmp);
-      fclose(out_bmp);
-      fclose(key_file);
-      free_bmp_img(&img);
-      free(key);
-      
-      return 0;
-    }
-
-    // print_key(key, 5);
-
-    if (insert(key, &img, msg) == -1) {
+    if (insert(key_file, &img, msg_file) == -1) {
       printf("Failed to insert key\n");
-      fclose(in_bmp);
-      fclose(out_bmp);
-      fclose(key_file);
-      free_bmp_img(&img);
-      free(key);
-
-      return 0;
+      goto free_all;
     }
 
     save_bmp(&img, out_bmp);
-    
-    /* START TEST */
-    char mess[3];
-    mess[2] = 0;
-    extract(key, &img, mess, 2);
-    printf("extracted: %s\n", mess);
 
-    /* END TEST */
+    free_all: 
 
     free_bmp_img(&img);
-    free(key);
-    fclose(in_bmp);
-    fclose(out_bmp);
-    fclose(key_file);
+    if (in_bmp != NULL) 
+      fclose(in_bmp);
+    if (out_bmp != NULL) 
+      fclose(out_bmp);
+    if (key_file != NULL) 
+      fclose(key_file);
+    if (msg_file != NULL)
+      fclose(msg_file);
   }
 
-  
+  if (strcmp(argv[1], "extract") == 0) {
+    if (argc != 5) {
+      printf("Invalid numbfer of arguments\n");
+      return 0;
+    }
+
+    FILE  *in_bmp, 
+          *key_file,
+          *msg_file;
+    bmp_img_t img;
+
+    in_bmp = fopen(argv[2], "rb");
+    if (in_bmp == NULL) 
+      goto free_all_extract;
+
+    if (load_bmp(in_bmp, &img) == -1) {
+      printf("Failed to load img");
+      goto free_all_extract;
+    }
+
+    key_file = fopen(argv[3], "r");
+    if (key_file == NULL) {
+      printf("Failed to open key file\n");
+      goto free_all_extract;
+    }
+    
+    msg_file = fopen(argv[4], "w");
+    if (msg_file == NULL) {
+      printf("Failed to open message file\n");
+      goto free_all_extract;
+    }
+
+    extract(key_file, &img, msg_file);
+    
+    free_all_extract: 
+    
+    if (in_bmp != NULL) 
+      fclose(in_bmp);
+    if (key_file != NULL)
+      fclose(key_file);
+    if (msg_file != NULL)
+      fclose(msg_file);
+    free_bmp_img(&img);
+  }
   return 0;
 }

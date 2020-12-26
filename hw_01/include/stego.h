@@ -16,9 +16,7 @@ typedef struct key {
   color_t color;
 } key_t;
 
-int insert(key_t* key, bmp_img_t* img, char* msg);
-int extract(key_t* key, bmp_img_t* img, char* msg, int len);
-int get_key(FILE* file, int size, key_t* key);
-void print_key(key_t* key, int size);
+int insert(FILE* key_file, bmp_img_t* img, FILE* msg_file);
+int extract(FILE* key_file, const bmp_img_t* img, FILE* msg_file);
 
 #endif
