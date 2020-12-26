@@ -180,7 +180,10 @@ int main(int argc, char** argv) {
       goto free_all_extract;
     }
 
-    extract(key_file, &img, msg_file);
+    if (extract(key_file, &img, msg_file) == -1) {
+      printf("Failed to extract message\n");
+      goto free_all_extract;
+    };
     
     free_all_extract: 
     

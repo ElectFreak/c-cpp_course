@@ -36,8 +36,8 @@ static void print_key(key_t* key) {
 
 int insert(FILE* key_file, bmp_img_t* img, FILE* msg_file) {
   while (1) {
-    int chr = fgetc(msg_file);
-    if (chr == EOF) {
+    int chr = getc(msg_file);
+    if (chr == EOF || chr == '\n') {
       break;
     }
     char coded_chr = code(chr);
@@ -76,17 +76,22 @@ int insert(FILE* key_file, bmp_img_t* img, FILE* msg_file) {
 
 int extract(FILE* key_file, const bmp_img_t* img, FILE* msg_file) {
   key_t key;
-  while (!feof(key_file)) {
+  while (1) {
     char chr = 0;
 
     for (int j = 0; j < 5; j++) {
       char mask;
       
-      if (get_key(key_file, &key) == -1)
-        return -1;
+      if (get_key(key_file, &key) == -1) {
+        putc('\n', msg_file);
+        return 0;
+      }
       
       int x = key.x;
       int y = key.y;
+
+      if (x >= img->width || y >= img->height)
+        return -1;
 
       if (key.color == 'R') {
         mask = img->pixels[y][x].r & 1;
@@ -103,7 +108,7 @@ int extract(FILE* key_file, const bmp_img_t* img, FILE* msg_file) {
       chr |= mask << j;
     }
 
-    fputc(decode(chr), msg_file);
+    putc(decode(chr), msg_file);
   }
  
   return 0;
