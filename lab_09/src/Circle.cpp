@@ -1,6 +1,5 @@
 #include <iostream>
 #include <cstring>
-#include <cmath>
 
 #include "Circle.hpp"
 #include "Figure.hpp"
@@ -27,5 +26,5 @@ static inline int sqr(int x) {
 }
 
 bool Circle::is_inside(int x, int y) const {
-  return std::sqrt(sqr(this->x - x) + sqr(this->y - y)) <= this->radius;
+  return sqr(this->x - x) + sqr(this->y - y) <= sqr(this->radius);
 }
