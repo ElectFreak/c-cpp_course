@@ -19,6 +19,7 @@ void Scheme::push_back_figure(Figure* figure) {
 void Scheme::remove_figure(int id) {
   for (int i = 0; i < _sz; i++)
     if (_data[i]->get_id() == id) {
+      delete _data[i];
       for (int j = i; j < _sz - 1; j++) 
         _data[j] = _data[j+1];
       
@@ -39,7 +40,7 @@ void Scheme::zoom_figure(int id, int factor) {
     }
 }
 
-Figure* Scheme::is_inside_figure(int x, int y) {
+Figure* Scheme::is_inside_figure(int x, int y) const {
   for (int i = 0; i < _sz; i++)
     if (_data[i]->is_inside(x, y))
       return _data[i];
@@ -53,4 +54,3 @@ void Scheme::move(int id, int new_x, int new_y) {
       return;
     }
 }
-

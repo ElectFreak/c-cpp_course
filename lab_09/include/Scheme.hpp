@@ -12,7 +12,7 @@ public:
 
   void print_all_figures() const;
   void zoom_figure(int id, int factor);
-  Figure* is_inside_figure(int x, int y);
+  Figure* is_inside_figure(int x, int y) const;
   void move(int id, int new_x, int new_y);
   
 private:  
