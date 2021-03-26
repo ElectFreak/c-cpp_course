@@ -7,20 +7,22 @@
 
 #include "employees.hpp"
 
-void create_employee_of_type(int32_t type, Employee*& employee) {
-  if (type == Developer::type)
-    employee = new Developer;
-  if (type == SalesManager::type)
-    employee = new SalesManager;
-}
+const int32_t Employee::type;
 
 Employee::Employee(const char* name, int32_t base_salary) :
-  _name{ std::strcpy(new char[strlen(name) + 1], name) },
+  _name{ std::strcpy(new char[101], name) },
   _base_salary{ base_salary }
 {}
 
 Employee::~Employee() {
   delete[] _name;
+}
+
+void create_employee_of_type(int32_t type, Employee*& employee) {
+  if (type == Developer::type)
+    employee = new Developer;
+  if (type == SalesManager::type)
+    employee = new SalesManager;
 }
 
 std::ostream& operator<<(std::ostream& out, const Employee& employee) {
@@ -43,6 +45,8 @@ std::ifstream& operator>>(std::ifstream& in, Employee& employee) {
   return in;
 }
 
+const int32_t Developer::type;
+
 Developer::Developer(const char* name, int32_t base_salary, bool has_bonus) :
   Employee(name, base_salary),
   _has_bonus{ has_bonus }
@@ -59,7 +63,7 @@ bool Developer::has_bonus() const {
 }
 
 void Developer::print(std::ostream& out) const {
-  out << "Developer" << std::endl 
+  out << "Developer" << std::endl
     << "Name: " << _name << std::endl
     << "Base Salary: " << _base_salary << std::endl
     << "Has bonus: " << (_has_bonus ? "+" : "-") << std::endl;
@@ -67,12 +71,11 @@ void Developer::print(std::ostream& out) const {
 
 void Developer::read(std::istream& in) {
   in >> _name
-    >> _base_salary
-    >> _has_bonus;
+     >> _base_salary
+     >> _has_bonus;
 }
 
 void Developer::printf(std::ofstream& out) const {
-  // int32_t type = Developer::type;
   out.write((char*)&(Developer::type), 4);
   out.write(_name, strlen(_name) + 1);
   out.write((char*)&(_base_salary), 4);
@@ -80,14 +83,12 @@ void Developer::printf(std::ofstream& out) const {
 }
 
 void Developer::readf(std::ifstream& in) {
-  int i = 0;
-  do
-    in.read(_name + i, 1);
-  while (_name[i++] != 0);
-
+  in.getline(_name, 101, 0);
   in.read((char*)&(_base_salary), 4);
   in.read((char*)&(_has_bonus), 1);
 }
+
+const int32_t SalesManager::type;
 
 SalesManager::SalesManager(const char* name, int32_t base_salary, int32_t sold_nm, int32_t price) :
   Employee(name, base_salary),
@@ -108,7 +109,7 @@ int32_t SalesManager::price() const {
 }
 
 void SalesManager::print(std::ostream& out) const {
-  out << "Sales Manager" << std::endl 
+  out << "Sales Manager" << std::endl
     << "Name: " << _name << std::endl
     << "Base Salary: " << _base_salary << std::endl
     << "Sold items: " << _sold_nm << std::endl
@@ -123,8 +124,7 @@ void SalesManager::read(std::istream& in) {
 }
 
 void SalesManager::printf(std::ofstream& out) const {
-  int32_t type = SalesManager::type;
-  out.write((char*)&(type), 4);
+  out.write((char*)&(SalesManager::type), 4);
   out.write(_name, std::strlen(_name) + 1);
   out.write((char*)&(_base_salary), 4);
   out.write((char*)&(_sold_nm), 4);
@@ -132,11 +132,7 @@ void SalesManager::printf(std::ofstream& out) const {
 }
 
 void SalesManager::readf(std::ifstream& in) {
-  int i = 0;
-  do
-    in.read(_name + i, 1);
-  while (_name[i++] != 0);
-
+  in.getline(_name, 101, 0);
   in.read((char*)&(_base_salary), 4);
   in.read((char*)&(_sold_nm), 4);
   in.read((char*)&(_price), 4);
@@ -169,7 +165,7 @@ std::ostream& operator<<(std::ostream& out, const EmployeesArray& arr) {
 }
 
 std::ofstream& operator<<(std::ofstream& out, const EmployeesArray& arr) {
-  int32_t size = (int32_t)arr._employees.size();
+  uint32_t size = (uint32_t)arr._employees.size();
   out.write((char*)&size, 4);
 
   for (size_t i = 0; i < arr._employees.size(); i++)
@@ -179,16 +175,26 @@ std::ofstream& operator<<(std::ofstream& out, const EmployeesArray& arr) {
 }
 
 std::ifstream& operator>>(std::ifstream& in, EmployeesArray& arr) {
-  int32_t size;
+  uint32_t size;
   in.read((char*)&size, 4);
 
   for (size_t i = 0; i < size; i++) {
     int32_t type;
     in.read((char*)&type, 4);
 
-    Employee* employee;
+    Employee* employee = nullptr;
     create_employee_of_type(type, employee);
+    if (employee == nullptr) {
+      std::cerr << "Bad type" << std::endl;
+      in.setstate(std::ios::failbit);
+      return in;
+    }
+      
     in >> *employee;
+    if (in.fail()) {
+      std::cerr << "Failed to read employee" << std::endl;
+      return in;
+    }
     arr.add(employee);
   }
 
