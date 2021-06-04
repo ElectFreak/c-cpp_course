@@ -1,14 +1,73 @@
 #include <iostream>
+#include <string_view>
 
 #include "HuffmanArchiver.h"
+#include "Exception.h"
 
-int main(int arc, char** argv) {  
-  HuffmanArchiver archiver("file", "out");
-  // std::cout << "smth" << std::endl;
-  archiver.zip();
+enum action_t {
+  PACK,
+  UNPACK
+} action;
 
-  HuffmanArchiver unpack("out", "unpack");
-  unpack.unzip();
+std::string_view file_in, file_out;
+
+void process_args(int argc, char** argv) {
+  if (argc != 6) {
+    throw HuffException::BadArguments();
+  }
+
+  int i = 1, j = 0;
+  while (i != argc && ++j != 5) {
+    std::string_view arg(argv[i]);
+
+    if (arg == "-c") {
+      action = PACK;
+      ++i;
+    }
+
+    if (arg == "-u") {
+      action = UNPACK;
+      ++i;
+    }
+
+    if (arg == "-f" || arg == "--file") {
+      file_in = std::string_view(argv[i + 1]);
+      i += 2;
+    }
+
+    if (arg == "-o" || arg == "--output") {
+      file_out = std::string_view(argv[i + 1]);
+      i += 2;
+    }
+  }
+
+  if (i != argc)
+    throw HuffException::BadArguments();
+}
+
+int main(int argc, char** argv) {
+
+  HuffmanArchiver archiver;
+  try {
+    process_args(argc, argv);
+    switch (action) {
+    case (PACK):
+      archiver.zip(file_in, file_out);
+      break;
+    case (UNPACK):
+      archiver.unzip(file_in, file_out);
+      break;
+    }
+  }
+  catch (HuffException::Exception& e) {
+    std::cerr << e.what() << std::endl;
+    return 1;
+  }
+
+
+  std::cout << std::dec << archiver.stats.input_size << '\n'
+    << archiver.stats.output_size << '\n'
+    << archiver.stats.metadata_size << std::endl;
 
   return 0;
 }

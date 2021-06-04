@@ -1,6 +1,7 @@
 #pragma once
 
 #include "TreeNode.h"
+#include "Exception.h"
 
 #include <algorithm>
 #include <fstream>
@@ -13,40 +14,27 @@ struct code_t {
   uint8_t len;
 };
 
-class HuffTree {
+class HuffCodes {
 
 public:
-  HuffTree() = default;
-
-  void make_codes_from_file(std::ifstream& fin) {
-
-    /* Fill future leafs */
-
-    std::vector<TreeNode*> bytes;
-    for (uint16_t i = 0; i < 256; ++i)
-      bytes.push_back(new TreeNode((uint8_t)i));
-
-    /* First reading, count frequency */
-
-    uint8_t byte;
-    while (fin.read((char*)&byte, 1)) {
-      ++(bytes[byte]->freq);
-    }
+  void make_codes_from_file(const uint64_t* bytes_freq) {
 
     std::vector<TreeNode*> nodes;
-    for (auto& node : bytes)
-      if (node->freq) {
-        nodes.push_back(node);
-        // std::cout << "byte " << std::hex << (int)node->byte << " met " << (int)node->freq << " times" << std::endl;
-      }
+    for (uint16_t i = 0; i < 256; i++)
+      if (bytes_freq[i])
+        nodes.push_back(new TreeNode(i, bytes_freq[i]));
 
     /* Sorting leafs by frequency */
-
     std::sort(nodes.begin(), nodes.end(), [](TreeNode* first, TreeNode* second) {
       return first->freq > second->freq;
       });
 
     /* Build tree */
+    if (nodes.size() == 1) {
+      codes_table.resize(256);
+      codes_table[nodes.back()->byte] = code_t{ 0, 1 };
+      return;
+    }
 
     while (nodes.size() > 1) {
       TreeNode* new_node = new TreeNode(*(nodes.end() - 1), *(nodes.end() - 2));
@@ -59,26 +47,24 @@ public:
         }
     }
 
-    root = nodes.back();
+    average_codes_tree_root = nodes.back();
 
     /* Fill average codes lengths */
-
     current_code_len = 0;
-    _fill_codes_lengths(root);
+    _fill_codes_lengths(average_codes_tree_root);
 
     /* Make cannonical codes */
     _make_cannonical_codes();
   }
 
-  void make_codes_from_archive(std::ifstream& fin) {
-    uint8_t freq;
+  void make_codes_from_archive(const uint8_t* lengths) {
     for (uint16_t i = 0; i < 256; i++) {
-      fin.read((char*)&freq, 1);
-      if (freq)
-        length_byte_pairs.emplace_back(freq, i);
+      if (lengths[i])
+        length_byte_pairs.emplace_back(lengths[i], i);
     }
 
     _make_cannonical_codes();
+    _make_prefix_tree();
   }
 
   code_t get_code(const uint8_t byte) {
@@ -86,6 +72,25 @@ public:
   }
 
   TreeNode* get_prefix_tree() {
+    return prefix_tree_root;
+  }
+
+  ~HuffCodes() {
+    if (average_codes_tree_root)
+      _free_node(average_codes_tree_root);
+
+    if (prefix_tree_root)
+      _free_node(prefix_tree_root);
+  }
+
+private:
+  TreeNode* average_codes_tree_root = nullptr;
+  TreeNode* prefix_tree_root = nullptr;
+  std::vector<std::pair<uint8_t, uint8_t>> length_byte_pairs;
+  std::vector<code_t> codes_table;
+  uint8_t current_code_len;
+
+  void _make_prefix_tree() {
     TreeNode* root = new TreeNode();
     for (uint16_t i = 0; i < 256; i++) {
       code_t code = get_code((uint8_t)i);
@@ -113,18 +118,8 @@ public:
       current_node->byte = (uint8_t)i;
     }
 
-    return root;
+    prefix_tree_root = root;
   }
-
-  ~HuffTree() {
-    // _free_node(root);
-  }
-
-private:
-  TreeNode* root;
-  std::vector<std::pair<uint8_t, uint8_t>> length_byte_pairs;
-  std::vector<code_t> codes_table;
-  uint8_t current_code_len;
 
   void _free_node(TreeNode* node) {
     if (node->left && node->right) {
@@ -143,15 +138,9 @@ private:
       current_code.bits <<= (len - current_code.len);
       current_code.len = len;
       codes_table[byte] = current_code;
-      // std::cout << "байту " << (int)byte << " присвоен код " << std::bitset<12>(current_code.bits) << " с длиной " << (int)current_code.len << std::endl;
 
       ++current_code.bits;
     }
-
-    // std::cout << std::endl;
-
-    // for (int i = 0; i < 256; i++)
-    //   std::cout << "code for byte " << i << " is " << std::bitset<8>(codes_table[i].bits) << " len is " << (int)codes_table[i].len << std::endl;
   }
 
   void _fill_codes_lengths(TreeNode* node) {
