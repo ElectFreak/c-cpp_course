@@ -29,7 +29,7 @@ int main() {
         std::cerr << "Bad type" << std::endl;
         break;
       }
-      
+
       std::cin >> *employee;
       if (std::cin.fail()) {
         std::cerr << "Failed to read employee" << std::endl;

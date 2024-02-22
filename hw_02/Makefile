@@ -1,7 +1,13 @@
 FLAGS=-std=c++17 -Iinclude
 
-huffman: obj/main.o
-	g++ obj/main.o -o huffman
+huffman: obj/main.o obj/HuffCodes.o obj/HuffmanArchiver.o
+	g++ obj/*.o -o huffman
+
+obj/HuffCodes.o: include/HuffCodes.h src/HuffCodes.cpp
+	g++ -c src/HuffCodes.cpp $(FLAGS) -o obj/HuffCodes.o
+
+obj/HuffmanArchiver.o: include/HuffmanArchiver.h src/HuffmanArchiver.cpp
+	g++ -c src/HuffmanArchiver.cpp $(FLAGS) -o obj/HuffmanArchiver.o
 
 obj/main.o: src/main.cpp include/HuffmanArchiver.h include/HuffCodes.h include/Exception.h | obj
 	g++ -c src/main.cpp $(FLAGS) -o obj/main.o

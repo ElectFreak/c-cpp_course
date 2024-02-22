@@ -14,5 +14,5 @@ public:
 
   void zoom(int factor) override;
 
-  const char* const label; // or without const? just delete.
+  char* label; // or without const? just delete.
 };

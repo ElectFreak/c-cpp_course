@@ -192,7 +192,7 @@ std::ifstream& operator>>(std::ifstream& in, EmployeesArray& arr) {
       
     in >> *employee;
     if (in.fail()) {
-      std::cerr << "Failed to read employee" << std::endl;
+      std::cerr << "Failed to read employee" << std::endl;  
       return in;
     }
     arr.add(employee);

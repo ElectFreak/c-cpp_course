@@ -5,9 +5,12 @@
 
 Circle::Circle(int id, int x, int y, int radius, const char* s) :
   Figure(id, x, y),
-  radius{ radius },
-  label{ std::strcpy(new char[std::strlen(s) + 1], s) }
-{};
+  radius{ radius }
+  // label{ std::strcpy(new char[std::strlen(s) + 1], s) }
+{
+  label = new char[std::strlen(s) + 1];
+  std::strcpy(label, s);
+};
 
 Circle::~Circle() {
   delete[] label;

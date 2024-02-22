@@ -1,12 +1,9 @@
 #include "shared_ptr.hpp"
 #include "matrix.hpp"
-#include <iostream>
+
 // Storage implement
 
-shared_ptr::Storage::Storage(Matrix* mtx) : data_(mtx), ref_count_(1) {
-  // if (mtx != nullptr)
-    // incr();
-}
+shared_ptr::Storage::Storage(Matrix* mtx) : data_(mtx), ref_count_(1) {}
 
 shared_ptr::Storage::~Storage() {
   if (data_ != nullptr)

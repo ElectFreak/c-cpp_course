@@ -1,16 +1,16 @@
 #pragma once
 
 #include <cstddef>
-#include <new>
+// #include <new>
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 namespace containers {
 
   template<typename T>
   class my_vector {
   public:
-
     my_vector() : _capacity{ 0 }, _size{ 0 }, _array{ nullptr } {}
 
     explicit my_vector(std::size_t n) : _capacity{ 0 }, _size{ 0 } { // contract: T is DefaultConstructable
@@ -57,34 +57,36 @@ namespace containers {
     }
 
     void resize(std::size_t n) { // contract: T is DefaultConstructable
-      reserve(n);
-
-      for (std::size_t i = n; i < _size; i++)
-        _array[i].~T();
-
-      for (std::size_t i = _size; i < n; i++)
-        new(_array + i)T();
-
-      _size = n;
+      if (n > _size)
+        _resize_up(n);
+      if (n < _size)
+        _resize_down(n);
     }
 
-    void push_back(const T& t);
+    void push_back(const T& t) {
+      if (_size + 1 > _capacity)
+        reserve(std::max(_size << 1, (std::size_t)2));
+
+      new(_array + _size)T(t);
+      _size++;
+    }
 
     void pop_back() {
       _array[_size - 1].~T();
       _size--;
     }
 
-
     void clear() {
-      resize(0);
+      _resize_down(0);
     }
 
     void reserve(std::size_t new_capacity) {
       if (new_capacity <= _capacity)
         return;
 
-      std::size_t complete_capacity = 1 << (int)std::ceil(std::log2(new_capacity));
+      std::size_t complete_capacity = 1;
+      while (complete_capacity < new_capacity)
+        complete_capacity <<= 1;
 
       T* new_array = _alloc_mem(complete_capacity);
       for (std::size_t i = 0; i < _size; i++)
@@ -120,6 +122,27 @@ namespace containers {
         new(_array + i)T(other._array[i]);
     }
 
+    void _resize_up(std::size_t n) { // contract: T is DefaultConstructable
+      if (n <= _size)
+        return;
+
+      reserve(n);
+      for (std::size_t i = _size; i < n; i++)
+        new(_array + i)T();
+
+      _size = n;
+    }
+
+    void _resize_down(std::size_t n) { // contract: T is Destrutable (always)
+      if (n >= _size)
+        return;
+
+      for (std::size_t i = n; i < _size; i++)
+        _array[i].~T();
+
+      _size = n;
+    }
+
   };
 
   template<typename T>
@@ -130,5 +153,3 @@ namespace containers {
     return out;
   }
 }
-
-#include "my_vector_impl.hpp"

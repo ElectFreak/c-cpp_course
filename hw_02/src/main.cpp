@@ -48,14 +48,15 @@ void process_args(int argc, char** argv) {
 int main(int argc, char** argv) {
 
   HuffmanArchiver archiver;
+  stats_t stats;
   try {
     process_args(argc, argv);
     switch (action) {
     case (PACK):
-      archiver.zip(file_in, file_out);
+      stats = archiver.zip(file_in, file_out);
       break;
     case (UNPACK):
-      archiver.unzip(file_in, file_out);
+      stats = archiver.unzip(file_in, file_out);
       break;
     }
   }
@@ -64,10 +65,9 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-
-  std::cout << std::dec << archiver.stats.input_size << '\n'
-    << archiver.stats.output_size << '\n'
-    << archiver.stats.metadata_size << std::endl;
+  std::cout << std::dec << stats.input_size << '\n'
+    << stats.output_size << '\n'
+    << stats.metadata_size << std::endl;
 
   return 0;
 }
